@@ -105,42 +105,111 @@ go test -tags integration ./internal/repository/...   # интеграционн
 
 ## Примеры запросов
 
+Примеры рассчитаны на пустую базу: id пользователей, команды и задачи равны 1 и 2. Если база уже заполнена, подставьте id из ответов. 
+Сценарий: Alice создаёт команду, приглашает Bob и ставит ему задачу.
+
+### Linux / macOS (bash)
+
+Нужны `curl` и `jq`.
+
 ```bash
 API=http://localhost:8080/api/v1
+JSON='Content-Type: application/json'
 
-# регистрация и вход
-curl -s -X POST $API/register -H 'Content-Type: application/json' \
-  -d '{"email":"alice@example.com","password":"Secret123","name":"Alice"}'
-TOKEN=$(curl -s -X POST $API/login -H 'Content-Type: application/json' \
-  -d '{"email":"alice@example.com","password":"Secret123"}' | jq -r .access_token)
+# регистрация (в ответе id пользователя)
+curl -s -X POST $API/register -H "$JSON" -d '{"name":"Alice","email":"alice@example.com","password":"Secret123"}'
+curl -s -X POST $API/register -H "$JSON" -d '{"name":"Bob","email":"bob@example.com","password":"Secret123"}'
+
+# вход
+LOGIN=$(curl -s -X POST $API/login -H "$JSON" -d '{"email":"alice@example.com","password":"Secret123"}')
+TOKEN=$(echo "$LOGIN" | jq -r .access_token)
+REFRESH=$(echo "$LOGIN" | jq -r .refresh_token)
 AUTH="Authorization: Bearer $TOKEN"
 
-# команда и приглашение (user_id приглашаемого должен существовать)
-curl -s -X POST $API/teams -H "$AUTH" -H 'Content-Type: application/json' -d '{"name":"Backend"}'
-curl -s -X POST $API/teams/1/invite -H "$AUTH" -H 'Content-Type: application/json' -d '{"user_id":2,"role":"member"}'
+# команда и участники
+curl -s -X POST $API/teams -H "$AUTH" -H "$JSON" -d '{"name":"Backend"}'
+curl -s -X POST $API/teams/1/invite -H "$AUTH" -H "$JSON" -d '{"user_id":2,"role":"member"}'
 curl -s $API/teams -H "$AUTH"
+curl -s $API/teams/1/members -H "$AUTH"
+curl -s -X PATCH $API/teams/1/members/2 -H "$AUTH" -H "$JSON" -d '{"role":"admin"}'
 
 # задачи
-curl -s -X POST $API/tasks -H "$AUTH" -H 'Content-Type: application/json' \
-  -d '{"team_id":1,"title":"Настроить CI","description":"GitHub Actions","assignee_id":2}'
+curl -s -X POST $API/tasks -H "$AUTH" -H "$JSON" \
+  -d '{"team_id":1,"title":"Set up CI","description":"GitHub Actions","assignee_id":2}'
 curl -s "$API/tasks?team_id=1&status=backlog&assignee_id=2&limit=20&offset=0" -H "$AUTH"
 curl -s "$API/tasks?team_id=1&limit=20&cursor=<next_cursor>" -H "$AUTH"
-
-curl -s -X PUT $API/tasks/1 -H "$AUTH" -H 'Content-Type: application/json' \
-  -d '{"title":"Настроить CI","description":"GitHub Actions","status":"in_progress","assignee_id":2,"version":1}'
-
-# карточка задачи
 curl -s $API/tasks/1 -H "$AUTH"
 
+# обновление: version из последнего ответа, при устаревшей версии вернётся 409
+curl -s -X PUT $API/tasks/1 -H "$AUTH" -H "$JSON" \
+  -d '{"title":"Set up CI","description":"GitHub Actions","status":"in_progress","assignee_id":2,"version":1}'
+
+# история и комментарии
 curl -s $API/tasks/1/history -H "$AUTH"
-curl -s -X POST $API/tasks/1/comments -H "$AUTH" -H 'Content-Type: application/json' -d '{"content":"Взял в работу"}'
+curl -s -X POST $API/tasks/1/comments -H "$AUTH" -H "$JSON" -d '{"content":"Taking it"}'
 curl -s $API/tasks/1/comments -H "$AUTH"
 
-# отчёт (owner/admin)
+# отчёт по команде (owner/admin)
 curl -s $API/teams/1/stats -H "$AUTH"
 
-# обновление токенов
-curl -s -X POST $API/refresh -H 'Content-Type: application/json' -d '{"refresh_token":"<refresh_token>"}'
+# токены: обновление пары и выход
+curl -s -X POST $API/refresh -H "$JSON" -d "{\"refresh_token\":\"$REFRESH\"}"
+curl -s -X POST $API/logout -H "$JSON" -d '{"refresh_token":"<refresh_token из ответа /refresh>"}'
+
+# удаление
+curl -s -X DELETE $API/tasks/1 -H "$AUTH"
+curl -s -X DELETE $API/teams/1/members/2 -H "$AUTH"
+curl -s -X DELETE $API/teams/1 -H "$AUTH"
+```
+
+### Windows (командная строка cmd)
+
+```bat
+set API=http://localhost:8080/api/v1
+
+:: регистрация (в ответе id пользователя)
+curl -s -X POST %API%/register -H "Content-Type: application/json" -d "{\"name\":\"Alice\",\"email\":\"alice@example.com\",\"password\":\"Secret123\"}"
+curl -s -X POST %API%/register -H "Content-Type: application/json" -d "{\"name\":\"Bob\",\"email\":\"bob@example.com\",\"password\":\"Secret123\"}"
+
+:: вход: скопируйте access_token и refresh_token из ответа
+curl -s -X POST %API%/login -H "Content-Type: application/json" -d "{\"email\":\"alice@example.com\",\"password\":\"Secret123\"}"
+set TOKEN=<access_token>
+set REFRESH=<refresh_token>
+
+:: команда и участники
+curl -s -X POST %API%/teams -H "Authorization: Bearer %TOKEN%" -H "Content-Type: application/json" -d "{\"name\":\"Backend\"}"
+curl -s -X POST %API%/teams/1/invite -H "Authorization: Bearer %TOKEN%" -H "Content-Type: application/json" -d "{\"user_id\":2,\"role\":\"member\"}"
+curl -s %API%/teams -H "Authorization: Bearer %TOKEN%"
+curl -s %API%/teams/1/members -H "Authorization: Bearer %TOKEN%"
+curl -s -X PATCH %API%/teams/1/members/2 -H "Authorization: Bearer %TOKEN%" -H "Content-Type: application/json" -d "{\"role\":\"admin\"}"
+
+:: задачи (статус при создании всегда backlog)
+curl -s -X POST %API%/tasks -H "Authorization: Bearer %TOKEN%" -H "Content-Type: application/json" ^
+  -d "{\"team_id\":1,\"title\":\"Set up CI\",\"description\":\"GitHub Actions\",\"assignee_id\":2}"
+curl -s "%API%/tasks?team_id=1&status=backlog&assignee_id=2&limit=20&offset=0" -H "Authorization: Bearer %TOKEN%"
+curl -s "%API%/tasks?team_id=1&limit=20&cursor=<next_cursor>" -H "Authorization: Bearer %TOKEN%"
+curl -s %API%/tasks/1 -H "Authorization: Bearer %TOKEN%"
+
+:: обновление: version из последнего ответа, при устаревшей версии вернётся 409
+curl -s -X PUT %API%/tasks/1 -H "Authorization: Bearer %TOKEN%" -H "Content-Type: application/json" ^
+  -d "{\"title\":\"Set up CI\",\"description\":\"GitHub Actions\",\"status\":\"in_progress\",\"assignee_id\":2,\"version\":1}"
+
+:: история и комментарии
+curl -s %API%/tasks/1/history -H "Authorization: Bearer %TOKEN%"
+curl -s -X POST %API%/tasks/1/comments -H "Authorization: Bearer %TOKEN%" -H "Content-Type: application/json" -d "{\"content\":\"Taking it\"}"
+curl -s %API%/tasks/1/comments -H "Authorization: Bearer %TOKEN%"
+
+:: отчёт по команде (owner/admin)
+curl -s %API%/teams/1/stats -H "Authorization: Bearer %TOKEN%"
+
+:: токены: обновление пары и выход
+curl -s -X POST %API%/refresh -H "Content-Type: application/json" -d "{\"refresh_token\":\"%REFRESH%\"}"
+curl -s -X POST %API%/logout -H "Content-Type: application/json" -d "{\"refresh_token\":\"<refresh_token из ответа /refresh>\"}"
+
+:: удаление
+curl -s -X DELETE %API%/tasks/1 -H "Authorization: Bearer %TOKEN%"
+curl -s -X DELETE %API%/teams/1/members/2 -H "Authorization: Bearer %TOKEN%"
+curl -s -X DELETE %API%/teams/1 -H "Authorization: Bearer %TOKEN%"
 ```
 
 ## Принятые решения
