@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS refresh_tokens;
+DROP TABLE IF EXISTS task_comments;
+DROP TABLE IF EXISTS task_history;
+DROP TABLE IF EXISTS tasks;
+DROP TABLE IF EXISTS team_members;
+DROP TABLE IF EXISTS teams;
+DROP TABLE IF EXISTS users;

@@ -1,0 +1,1163 @@
+basePath: /api/v1
+definitions:
+  ChangeRoleRequest:
+    properties:
+      role:
+        enum:
+        - admin
+        - member
+        example: admin
+        type: string
+    type: object
+  Comment:
+    properties:
+      content:
+        example: Взяла в работу
+        type: string
+      created_at:
+        type: string
+      id:
+        example: 1
+        type: integer
+      task_id:
+        example: 1
+        type: integer
+      user_id:
+        example: 3
+        type: integer
+    type: object
+  CommentList:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/Comment'
+        type: array
+    type: object
+  CreateCommentRequest:
+    properties:
+      content:
+        description: 1–512 characters; line breaks allowed.
+        example: Взяла в работу
+        type: string
+    type: object
+  CreateTaskRequest:
+    properties:
+      assignee_id:
+        example: 2
+        type: integer
+      description:
+        description: Up to 512 characters; line breaks allowed.
+        example: GitHub Actions
+        type: string
+      team_id:
+        example: 1
+        type: integer
+      title:
+        description: 1–256 characters, single line.
+        example: Настроить CI
+        type: string
+    type: object
+  CreateTeamRequest:
+    properties:
+      name:
+        description: 1–256 characters, single line.
+        example: Backend
+        type: string
+    type: object
+  Entity:
+    properties:
+      id:
+        example: 1
+        type: integer
+      name:
+        example: Backend
+        type: string
+    type: object
+  ErrorBody:
+    properties:
+      code:
+        description: |-
+          Machine-readable code: validation_error, unauthorized, forbidden,
+          team_not_found, task_not_found, version_conflict, rate_limited, ...
+        example: validation_error
+        type: string
+      details:
+        description: Every validation problem of the request (validation_error only).
+        items:
+          $ref: '#/definitions/FieldError'
+        type: array
+      message:
+        description: Human-readable text; for validation_error all messages joined
+          with "; ".
+        example: title is required; status is required
+        type: string
+    type: object
+  ErrorResponse:
+    properties:
+      error:
+        $ref: '#/definitions/ErrorBody'
+    type: object
+  FieldChange:
+    properties:
+      new: {}
+      old: {}
+    type: object
+  FieldError:
+    properties:
+      field:
+        example: title
+        type: string
+      message:
+        example: title is required
+        type: string
+    type: object
+  HistoryEntry:
+    properties:
+      changed_by:
+        example: 1
+        type: integer
+      changes:
+        additionalProperties:
+          $ref: '#/definitions/FieldChange'
+        description: 'Changed fields: {"status": {"old": "backlog", "new": "in_progress"}}.'
+        type: object
+      created_at:
+        type: string
+      id:
+        example: 1
+        type: integer
+      task_id:
+        example: 1
+        type: integer
+    type: object
+  HistoryList:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/HistoryEntry'
+        type: array
+    type: object
+  InviteRequest:
+    properties:
+      role:
+        description: 'Owner may grant admin or member, admin — member only. Default:
+          member.'
+        enum:
+        - admin
+        - member
+        example: member
+        type: string
+      user_id:
+        example: 2
+        type: integer
+    type: object
+  LoginRequest:
+    properties:
+      email:
+        example: anna@example.com
+        type: string
+      password:
+        example: Password1
+        type: string
+    type: object
+  Member:
+    properties:
+      email:
+        example: anna@example.com
+        type: string
+      name:
+        example: Анна-Мария
+        type: string
+      role:
+        enum:
+        - owner
+        - admin
+        - member
+        example: member
+        type: string
+      team_id:
+        example: 1
+        type: integer
+      user_id:
+        example: 2
+        type: integer
+    type: object
+  MemberList:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/Member'
+        type: array
+    type: object
+  RefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    type: object
+  RegisterRequest:
+    properties:
+      email:
+        description: Up to 256 characters; stored lower-cased.
+        example: anna@example.com
+        type: string
+      name:
+        description: '2–256 characters: letters, spaces, hyphens, apostrophes, dots;
+          starts with a letter.'
+        example: Анна
+        type: string
+      password:
+        description: 8+ characters, at most 72 bytes; lowercase, uppercase and a digit;
+          no spaces.
+        example: Password1
+        type: string
+    type: object
+  StatusCount:
+    properties:
+      count:
+        example: 12
+        type: integer
+      status:
+        enum:
+        - backlog
+        - in_progress
+        - need_info
+        - done
+        example: done
+        type: string
+    type: object
+  Task:
+    properties:
+      assignee:
+        $ref: '#/definitions/Entity'
+      closed_at:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/Entity'
+      description:
+        example: GitHub Actions
+        type: string
+      id:
+        example: 1
+        type: integer
+      status:
+        enum:
+        - backlog
+        - in_progress
+        - need_info
+        - done
+        example: in_progress
+        type: string
+      team:
+        $ref: '#/definitions/Entity'
+      title:
+        example: Настроить CI
+        type: string
+      updated_at:
+        type: string
+      version:
+        example: 2
+        type: integer
+    type: object
+  TaskListItem:
+    properties:
+      assignee_id:
+        example: 2
+        type: integer
+      created_by:
+        example: 1
+        type: integer
+      id:
+        example: 1
+        type: integer
+      status:
+        enum:
+        - backlog
+        - in_progress
+        - need_info
+        - done
+        example: in_progress
+        type: string
+      team_id:
+        example: 1
+        type: integer
+      title:
+        example: Настроить CI
+        type: string
+    type: object
+  TaskPage:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/TaskListItem'
+        type: array
+      limit:
+        example: 20
+        type: integer
+      next_cursor:
+        description: Cursor of the next page; null when there are no more pages.
+        example: aWQ6Mjg
+        type: string
+      offset:
+        description: Offset mode only.
+        example: 0
+        type: integer
+      total:
+        description: Number of tasks matching the filter; offset mode only.
+        example: 27
+        type: integer
+    type: object
+  Team:
+    properties:
+      id:
+        example: 1
+        type: integer
+      name:
+        example: Backend
+        type: string
+      role:
+        description: Role of the current user in the team.
+        enum:
+        - owner
+        - admin
+        - member
+        example: owner
+        type: string
+    type: object
+  TeamList:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/Team'
+        type: array
+    type: object
+  TeamStats:
+    properties:
+      avg_close_hours:
+        description: The same value in hours.
+        example: 122
+        type: number
+      avg_close_minutes:
+        description: Average time from creation to closing over all closed tasks,
+          minutes.
+        example: 7320
+        type: number
+      generated_at:
+        type: string
+      tasks_by_status:
+        description: Task count per status, zeros included.
+        items:
+          $ref: '#/definitions/StatusCount'
+        type: array
+      team_id:
+        example: 1
+        type: integer
+      top_assignees_30d:
+        description: Top 3 assignees by tasks closed in the last 30 days.
+        items:
+          $ref: '#/definitions/TopAssignee'
+        type: array
+      total_comments:
+        description: Comments on all tasks of the team.
+        example: 6
+        type: integer
+    type: object
+  TokenPair:
+    properties:
+      access_token:
+        description: 'JWT (HS256): user id in "sub", expiry in "exp".'
+        type: string
+      refresh_token:
+        description: Opaque, single-use token for POST /refresh.
+        type: string
+    type: object
+  TopAssignee:
+    properties:
+      closed_tasks:
+        example: 5
+        type: integer
+      name:
+        example: Антон
+        type: string
+      user_id:
+        example: 2
+        type: integer
+    type: object
+  UpdateTaskRequest:
+    properties:
+      assignee_id:
+        example: 2
+        type: integer
+      description:
+        example: GitHub Actions
+        type: string
+      status:
+        enum:
+        - backlog
+        - in_progress
+        - need_info
+        - done
+        example: in_progress
+        type: string
+      title:
+        example: Настроить CI
+        type: string
+      version:
+        description: Version of the task the client based its edit on.
+        example: 1
+        type: integer
+    type: object
+  User:
+    properties:
+      created_at:
+        type: string
+      email:
+        example: anna@example.com
+        type: string
+      id:
+        example: 1
+        type: integer
+      name:
+        example: Анна
+        type: string
+    type: object
+info:
+  contact: {}
+  description: |-
+    REST API для управления задачами внутри команд: роли, история изменений, кеширование списков задач и SQL-отчёт.
+    Ошибки всегда приходят в формате {"error": {"code", "message", "details"}}; в details — все ошибки валидации запроса.
+  title: Task Service API
+  version: "1.0"
+paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Учётные данные
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/TokenPair'
+        "400":
+          description: validation_error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "429":
+          description: rate_limited
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: 'Вход: выдача access (JWT) и refresh токенов'
+      tags:
+      - auth
+  /logout:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Refresh-токен
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/RefreshRequest'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: validation_error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Отзыв refresh-токена (идемпотентно)
+      tags:
+      - auth
+  /refresh:
+    post:
+      consumes:
+      - application/json
+      description: Предъявленный refresh-токен отзывается, выдаётся новая пара (ротация).
+      parameters:
+      - description: Refresh-токен
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/TokenPair'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Обновление пары токенов
+      tags:
+      - auth
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Все ошибки валидации приходят одним ответом в `error.details`.
+      parameters:
+      - description: Данные пользователя
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/User'
+        "400":
+          description: validation_error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: email_taken
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "429":
+          description: rate_limited
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Регистрация пользователя
+      tags:
+      - auth
+  /tasks:
+    get:
+      description: 'Два режима пагинации: limit+offset (в ответе total и offset) или
+        limit+cursor (next_cursor из предыдущего ответа). Если передан cursor, offset
+        игнорируется. Сортировка от новых к старым.'
+      parameters:
+      - description: ID команды
+        in: query
+        name: team_id
+        required: true
+        type: integer
+      - description: Статус
+        enum:
+        - backlog
+        - in_progress
+        - need_info
+        - done
+        in: query
+        name: status
+        type: string
+      - description: ID исполнителя
+        in: query
+        name: assignee_id
+        type: integer
+      - default: 20
+        description: Размер страницы, 1–100
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Смещение (offset-режим)
+        in: query
+        name: offset
+        type: integer
+      - description: Курсор (cursor-режим)
+        in: query
+        name: cursor
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/TaskPage'
+        "400":
+          description: validation_error (все ошибки в details)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: team_not_found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Список задач команды (кешируется в Redis на 5 минут)
+      tags:
+      - tasks
+    post:
+      consumes:
+      - application/json
+      description: Создать задачу может любой участник команды; он же становится её
+        создателем. Статус назначает сервер (`backlog`); поле `status` в запросе отклоняется.
+      parameters:
+      - description: Задача
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/CreateTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/Task'
+        "400":
+          description: validation_error (все ошибки в details)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: team_not_found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Создание задачи в команде
+      tags:
+      - tasks
+  /tasks/{id}:
+    delete:
+      description: История и комментарии удаляются каскадно.
+      parameters:
+      - description: ID задачи
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Удалить только при совпадении версии
+        in: query
+        name: version
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: task_not_found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: version_conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Удаление задачи (owner, admin или создатель)
+      tags:
+      - tasks
+    get:
+      parameters:
+      - description: ID задачи
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Task'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: task_not_found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Задача по id (полная, с version для PUT)
+      tags:
+      - tasks
+    put:
+      consumes:
+      - application/json
+      description: 'Обязательны title, status и version; не переданное description
+        станет пустым, не переданный assignee_id снимет исполнителя. Owner/admin и
+        создатель меняют всё, исполнитель — только статус. Порядок проверок: 404 →
+        400 (все ошибки) → 403 → 409. Изменение пишется в историю в той же транзакции.'
+      parameters:
+      - description: ID задачи
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Новое состояние задачи
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/UpdateTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Task'
+        "400":
+          description: validation_error (все ошибки в details)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: task_not_found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: version_conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Полное обновление задачи
+      tags:
+      - tasks
+  /tasks/{id}/comments:
+    get:
+      parameters:
+      - description: ID задачи
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: 20
+        description: 1–100
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Смещение
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/CommentList'
+        "400":
+          description: validation_error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: task_not_found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Комментарии задачи (от старых к новым)
+      tags:
+      - comments
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID задачи
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Комментарий
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/CreateCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/Comment'
+        "400":
+          description: validation_error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: task_not_found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Добавление комментария (любой участник команды задачи)
+      tags:
+      - comments
+  /tasks/{id}/history:
+    get:
+      parameters:
+      - description: ID задачи
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: 20
+        description: 1–100
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Смещение
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/HistoryList'
+        "400":
+          description: validation_error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: task_not_found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: История изменений задачи
+      tags:
+      - tasks
+  /teams:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/TeamList'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Команды текущего пользователя
+      tags:
+      - teams
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Команда
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/CreateTeamRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/Team'
+        "400":
+          description: validation_error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Создание команды (текущий пользователь становится owner)
+      tags:
+      - teams
+  /teams/{id}:
+    delete:
+      description: Задачи, история, комментарии и участники удаляются каскадно.
+      parameters:
+      - description: ID команды
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: team_not_found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Удаление команды (только owner)
+      tags:
+      - teams
+  /teams/{id}/invite:
+    post:
+      consumes:
+      - application/json
+      description: Owner добавляет с ролью admin или member, admin — только member.
+        Роль owner не выдаётся.
+      parameters:
+      - description: ID команды
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Кого и с какой ролью
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/InviteRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/Member'
+        "400":
+          description: validation_error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: team_not_found, user_not_found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: already_member
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Добавление пользователя в команду
+      tags:
+      - teams
+  /teams/{id}/members:
+    get:
+      parameters:
+      - description: ID команды
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/MemberList'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: team_not_found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Участники команды (любому участнику)
+      tags:
+      - teams
+  /teams/{id}/members/{user_id}:
+    delete:
+      description: Owner удаляет любого, кроме себя; admin — только member; любой
+        не-owner может выйти сам. Удалённый снимается с задач команды (с записью в
+        историю).
+      parameters:
+      - description: ID команды
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: ID участника
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: team_not_found, member_not_found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Удаление участника из команды
+      tags:
+      - teams
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID команды
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: ID участника
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      - description: Новая роль
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/ChangeRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Member'
+        "400":
+          description: validation_error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: team_not_found, member_not_found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Смена роли участника (только owner)
+      tags:
+      - teams
+  /teams/{id}/stats:
+    get:
+      description: 'Один запрос с CTE: задачи по статусам, топ-3 исполнителя за 30
+        дней, среднее время закрытия, общее число комментариев к задачам команды.
+        Все подсчёты, округление и порядок — в MySQL.'
+      parameters:
+      - description: ID команды
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/TeamStats'
+        "401":
+          description: unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: team_not_found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: SQL-отчёт по команде (только owner или admin)
+      tags:
+      - stats
+securityDefinitions:
+  BearerAuth:
+    description: Access-токен из /login в виде "Bearer <token>".
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
